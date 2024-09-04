@@ -4,6 +4,8 @@
 
 # Timestamp Extraction with OCR from Voter Tally Sheets
 
+⭐ Star us on GitHub!
+
 ## Introduction
 
 This project began as an excuse to test the code-generation capabilities of [Cursor AI](https://www.cursor.com/) and its applications for data-wrangling, preparation and analysis.
