@@ -24,7 +24,7 @@ This project is designed to extract timestamps from a series of images using Opt
 
 ## get-images.py
 
-`get-images.py` is used to download the tally images from the [ResultadosConVzla](https://resultadosconvzla.com/) server. It uses threading and delays to efficiently download all data without taxing the server. The images can also be downloaded from the [Macedonia del Norte](macedoniadelnorte.com) website.
+`get-images.py` is used to download the tally images from the [ResultadosConVzla](https://resultadosconvzla.com/) server. It uses threading and delays to efficiently download all data without taxing the server. The images can also be downloaded from the [Macedonia del Norte](https://macedoniadelnorte.com) website.
 
 ## ocr-time.py
 
@@ -112,7 +112,7 @@ If I found any errors, I would let Cursor know and get it fixed. If I wanted mor
 - Tesseract OCR
 - Python libraries: PIL (Pillow), pytesseract, requests
 
-You will also need the CSV file from [Macedonia del Norte](macedoniadelnorte.com). This project includes a revised [version](data/resultados-with-timestamps.csv) that includes the timestamps.
+You will also need the CSV file from [Macedonia del Norte](https://macedoniadelnorte.com). This project includes a revised [version](data/resultados-with-timestamps.csv) that includes the timestamps.
 
 ## Installation
 
