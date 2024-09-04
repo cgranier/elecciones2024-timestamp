@@ -1,6 +1,6 @@
 ![Banner](charts/cumulative_vote_difference_over_time.png)
 
-[Léeme es español](/LEEME.md)
+[Léeme en español](/LEEME.md)
 
 # Timestamp Extraction with OCR from Voter Tally Sheets
 
