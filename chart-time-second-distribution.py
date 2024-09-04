@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 plt.style.use('seaborn-v0_8')
 
 # Read the CSV file
-df = pd.read_csv('resultados-with-timestamps.csv')
+df = pd.read_csv('data/resultados-with-timestamps.csv')
 
 # Function to extract seconds, minutes, and hours from the time_24 column
 def extract_time_parts(time_str):

@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from matplotlib.widgets import Button
 
 # Read the CSV file
-df = pd.read_csv('resultados-with-timestamps.csv')
+df = pd.read_csv('data/resultados-with-timestamps.csv')
 
 # Function to extract hour and minute from the time_24 column and adjust for next day
 def adjust_time(time_str):

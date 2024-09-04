@@ -160,7 +160,7 @@ class MainWindow(QMainWindow):
         main_layout.addLayout(controls_layout)
 
         # Load CSV and set image directory
-        self.load_csv("resultados-with-timestamps.csv")
+        self.load_csv("data/resultados-with-timestamps.csv")
         self.set_image_directory()
 
     def load_csv(self, filename):
@@ -223,7 +223,7 @@ class MainWindow(QMainWindow):
         self.csv_data[self.current_row + 1][timestamp_column] = new_timestamp
 
         # Save changes to CSV file
-        with open("resultados-with-timestamps.csv", 'w', newline='', encoding='utf-8') as csvfile:
+        with open("data/resultados-with-timestamps.csv", 'w', newline='', encoding='utf-8') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerows(self.csv_data)
 

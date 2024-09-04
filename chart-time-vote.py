@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from matplotlib.widgets import Button
 
 # Read the CSV file
-df = pd.read_csv('resultados-with-timestamps.csv')
+df = pd.read_csv('data/resultados-with-timestamps.csv')
 
 # Convert time_24 to datetime and adjust for crossing midnight
 def adjust_time(time_str):

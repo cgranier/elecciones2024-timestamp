@@ -1,7 +1,7 @@
 import csv
 
 # Input and output file names
-input_file = 'resultados-with-timestamps.csv'
+input_file = 'data/resultados-with-timestamps.csv'
 output_file = 'urls_with_nf.csv'
 
 # Open the input CSV file for reading
