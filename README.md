@@ -23,8 +23,8 @@ This project is designed to extract timestamps from a series of images using Opt
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/image-timestamp-extractor.git
-   cd image-timestamp-extractor
+   git clone https://github.com/yourusername/elecciones2024-timestamp.git
+   cd elecciones2024-timestamp
    ```
 
 2. Install required Python libraries:
