@@ -15,6 +15,20 @@ plt.style.use('seaborn-v0_8-whitegrid')
 # Read the CSV file
 df = pd.read_csv('data/resultados-with-timestamps.csv')
 
+# Sum all votes for each candidate
+total_EG = df['EG'].sum()
+total_NM = df['NM'].sum()
+total_votes = total_EG + total_NM
+
+# Calculate percentages
+percent_EG = (total_EG / total_votes) * 100
+percent_NM = (total_NM / total_votes) * 100
+
+# Print the results
+print("Overall Results")
+print(f"EG total votes: {total_EG}, percentage: {percent_EG:.2f}%")
+print(f"NM total votes: {total_NM}, percentage: {percent_NM:.2f}%")
+
 # Function to extract hour and minute from the time_24 column and adjust for next day
 def adjust_time(time_str):
     if time_str == '15:05:58':
@@ -72,7 +86,7 @@ def interval_to_text(interval):
     
     return interval
     
-# Calculate cumulative votes for each 15-minute interval
+# Calculate cumulative votes for each interval
 df['cumulative_EG'] = df.groupby('interval')['EG'].cumsum()
 df['cumulative_NM'] = df.groupby('interval')['NM'].cumsum()
 
@@ -87,12 +101,12 @@ df['winner'] = df[['cumulative_EG', 'cumulative_NM']].idxmax(axis=1)
 # Determine the color based on the winner
 df['color'] = np.where(df['cumulative_EG'] > df['cumulative_NM'], 'lightblue', 'lightcoral')
 
-# Keep only the last row of each 15-minute interval
+# Keep only the last row of each interval
 df = df.groupby('interval').last().reset_index()
 
 # Create the plot
 fig, ax = plt.subplots(figsize=(15, 8))
-ax.set_facecolor('#f0f0f0')  # Set a light gray background only for the plot area
+# ax.set_facecolor('#f0f0f0')  # Set a light gray background only for the plot area
 
 # Plot the scatter plot with the new color scheme
 scatter = ax.scatter(df['adjusted_time'], df['winning_pct'], 
@@ -132,36 +146,59 @@ ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%H:%M'))
 ax.xaxis.set_major_locator(plt.matplotlib.dates.HourLocator(interval=1))
 
 # Rotate and align the tick labels so they look better
-fig.autofmt_xdate()
+# fig.autofmt_xdate()
 
 # Convert interval to a more readable format for the title
 interval_text = interval_to_text(interval)
 
 # Set labels and title based on language
 if language == 'en':
-    ax.set_xlabel('Reported Closing Time', fontsize=12, fontweight='bold')
-    ax.set_ylabel('Winning Percentage', fontsize=12, fontweight='bold')
+    ax.set_xlabel('Reported Closing Time', fontsize=12, fontweight='normal', labelpad=10)
+    ax.set_ylabel('Winning Percentage', fontsize=12, fontweight='normal', labelpad=10)
     ax.set_title(f'Winning Percentage per Voting Booths Over Time (Interval: {interval_text})', 
-                 fontsize=16, fontweight='bold')
-    legend_labels = ['In favor of NM', 'In favor of EG']
+                 fontsize=16, fontweight='bold', pad=20)
+    legend_labels = [f'EG ({percent_EG:.0f}%)', f'NM ({percent_NM:.0f}%)']
 else:
-    ax.set_xlabel('Hora de Cierre Reportada', fontsize=12, fontweight='bold')
-    ax.set_ylabel('Porcentaje de Ventaja', fontsize=12, fontweight='bold')
+    ax.set_xlabel('Hora de Cierre Reportada', fontsize=12, fontweight='normal', labelpad=10)
+    ax.set_ylabel('Porcentaje de Ventaja', fontsize=12, fontweight='normal', labelpad=10)
     ax.set_title(f'Porcentaje de Ventaja por Centros Reportados (Intervalo: {interval_text})', 
-                 fontsize=16, fontweight='bold')
-    legend_labels = ['A favor de NM', 'A favor de EG']
-
+                 fontsize=16, fontweight='bold', pad=20)
+    legend_labels = [f'EG ({percent_EG:.0f}%)', f'NM ({percent_NM:.0f}%)']
 
 # Set y-axis limits to 50-100%
 ax.set_ylim(50, 100)
 
-# Update legend
-ax.scatter([], [], c='lightcoral', label=legend_labels[0], s=20)
-ax.scatter([], [], c='lightblue', label=legend_labels[1], s=20)
+# Adjust marker sizes based on percentages
+nm_size = percent_NM
+eg_size = percent_EG
+
+ax.scatter([], [], c='lightblue', label=legend_labels[0], s=eg_size)
+ax.scatter([], [], c='lightcoral', label=legend_labels[1], s=nm_size)
 ax.legend()
 
 # Add a grid for better readability
-ax.grid(True, linestyle='--', alpha=0.7)
+# ax.grid(True, linestyle='--', alpha=0.7)
+ax.grid(None)
+
+# Define font sizes
+SIZE_DEFAULT = 14
+SIZE_LARGE = 16
+plt.rc("font", family="Arial")  # controls default font
+plt.rc("font", weight="normal")  # controls default font
+plt.rc("font", size=SIZE_DEFAULT)  # controls default text sizes
+plt.rc("axes", titlesize=SIZE_LARGE)  # fontsize of the axes title
+plt.rc("axes", labelsize=SIZE_LARGE)  # fontsize of the x and y labels
+plt.rc("xtick", labelsize=SIZE_DEFAULT)  # fontsize of the tick labels
+plt.rc("ytick", labelsize=SIZE_DEFAULT)  # fontsize of the tick labels
+
+# Hide the all but the bottom spines (axis lines)
+ax.spines["right"].set_visible(False)
+ax.spines["left"].set_visible(False)
+ax.spines["top"].set_visible(False)
+
+# Only show ticks on the left and bottom spines
+ax.yaxis.set_ticks_position("left")
+ax.xaxis.set_ticks_position("bottom")
 
 # Enable zooming and panning
 ax.set_navigate(True)
@@ -180,12 +217,6 @@ def reset(event):
 reset_ax = plt.axes([0.8, 0.025, 0.1, 0.04])
 reset_button = Button(reset_ax, 'Reset Zoom', color='lightgoldenrodyellow', hovercolor='0.975')
 reset_button.on_clicked(reset)
-
-# Print some information about the data
-print(f"Total number of booths: {len(df)}")
-print(f"Earliest timestamp: {df['adjusted_time'].min()}")
-print(f"Latest timestamp: {df['adjusted_time'].max()}")
-print(f"Unique hours in the data: {sorted(df['adjusted_time'].dt.hour.unique())}")
 
 # Save the plot
 plt.savefig('voting_booth_scatter.png', dpi=300, bbox_inches='tight')
