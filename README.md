@@ -4,7 +4,7 @@
 
 # Timestamp Extraction with OCR from Voter Tally Sheets
 
-⭐ Star us on GitHub!
+⭐ Star us on GitHub - Support our research!
 
 ## Introduction
 
