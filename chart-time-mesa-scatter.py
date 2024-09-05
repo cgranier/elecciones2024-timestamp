@@ -4,9 +4,10 @@ from datetime import datetime, timedelta
 from matplotlib.widgets import Button
 import matplotlib.colors as mcolors
 import numpy as np
+import mplcursors
 
 # Language selector: 'en' for English, 'es' for Spanish
-language = 'es'
+language = 'en'
 
 # Set the style for a cleaner, more modern look
 plt.style.use('seaborn-v0_8-whitegrid')
@@ -75,6 +76,9 @@ def interval_to_text(interval):
 df['cumulative_EG'] = df.groupby('interval')['EG'].cumsum()
 df['cumulative_NM'] = df.groupby('interval')['NM'].cumsum()
 
+# Calculate the number of results (voting booths) per interval
+df['tables_in_interval'] = df.groupby('interval')['EG'].transform('count')
+
 # Calculate total votes and winning percentage for each interval
 df['total_votes'] = df['cumulative_EG'] + df['cumulative_NM']
 df['winning_pct'] = df[['cumulative_EG', 'cumulative_NM']].max(axis=1) / df['total_votes'] * 100
@@ -92,8 +96,36 @@ ax.set_facecolor('#f0f0f0')  # Set a light gray background only for the plot are
 
 # Plot the scatter plot with the new color scheme
 scatter = ax.scatter(df['adjusted_time'], df['winning_pct'], 
-                     c=df['color'], 
-                     s=20, alpha=0.7)
+                     c=df['color'],
+                     s=df['tables_in_interval'] * 3, 
+                     alpha=0.7,
+                     edgecolors='gray',
+                     linewidth=0.5)
+
+# Add tooltips
+cursor = mplcursors.cursor(scatter, hover=True)
+
+@cursor.connect("add")
+def on_add(sel):
+    index = sel.target.index
+    time = df['adjusted_time'].iloc[index].strftime('%H:%M')
+    eg_pct = df['cumulative_EG'].iloc[index] / df['total_votes'].iloc[index] * 100
+    nm_pct = df['cumulative_NM'].iloc[index] / df['total_votes'].iloc[index] * 100
+    results_count = df['tables_in_interval'].iloc[index]
+    
+    if language == 'en':
+        tooltip_text = (f"Time: {time}\n"
+                        f"EG: {eg_pct:.2f}%\n"
+                        f"NM: {nm_pct:.2f}%\n"
+                        f"Tables: {results_count}")
+    else:
+        tooltip_text = (f"Hora: {time}\n"
+                        f"EG: {eg_pct:.2f}%\n"
+                        f"NM: {nm_pct:.2f}%\n"
+                        f"Mesas: {results_count}")
+    
+    sel.annotation.set_text(tooltip_text)
+    sel.annotation.get_bbox_patch().set(fc="white", alpha=0.8, ec="black")
 
 # Set the x-axis to show hours and minutes
 ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%H:%M'))
@@ -111,13 +143,13 @@ if language == 'en':
     ax.set_ylabel('Winning Percentage', fontsize=12, fontweight='bold')
     ax.set_title(f'Winning Percentage per Voting Booths Over Time (Interval: {interval_text})', 
                  fontsize=16, fontweight='bold')
-    legend_labels = ['NM leading', 'EG leading']
+    legend_labels = ['In favor of NM', 'In favor of EG']
 else:
     ax.set_xlabel('Hora de Cierre Reportada', fontsize=12, fontweight='bold')
     ax.set_ylabel('Porcentaje de Ventaja', fontsize=12, fontweight='bold')
     ax.set_title(f'Porcentaje de Ventaja por Centros Reportados (Intervalo: {interval_text})', 
                  fontsize=16, fontweight='bold')
-    legend_labels = ['NM liderando', 'EG liderando']
+    legend_labels = ['A favor de NM', 'A favor de EG']
 
 
 # Set y-axis limits to 50-100%

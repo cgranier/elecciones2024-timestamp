@@ -71,6 +71,8 @@ The tool should display both the CSV file and the image file corresponding to th
 
 I made a bunch of charting tools on the fly, to look at the data quickly from different angles. This approach makes it very easy to test new ideas and really focus on the necessary charts, without wasting too much time massaging data and learning charting libraries. I will eventually put all this together into one tool, with better visuals and UI. But for now, they are a great set of tools for putting together a report. A Jupyter Notebook might be a good solution.
 
+![Scatter Plot of Vote Percentage by Interval](charts/voting_booth_scatter.png)
+
 - `chart-time-vote.py`
 - `chart-time-vote-cumulative.py`
 - `chart-time-vote-15-minute-votes.py`
