@@ -3,6 +3,13 @@ import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 from matplotlib.widgets import Button
 import matplotlib.colors as mcolors
+import numpy as np
+
+# Language selector: 'en' for English, 'es' for Spanish
+language = 'es'
+
+# Set the style for a cleaner, more modern look
+plt.style.use('seaborn-v0_8-whitegrid')
 
 # Read the CSV file
 df = pd.read_csv('data/resultados-with-timestamps.csv')
@@ -26,29 +33,66 @@ def adjust_time(time_str):
 # Convert time_24 to datetime and adjust for next day if necessary
 df['adjusted_time'] = df['time_24'].apply(adjust_time)
 
-# Remove rows with NaT values
-df = df.dropna(subset=['adjusted_time'])
+# Remove rows with NaT values and sort by adjusted time
+df = df.dropna(subset=['adjusted_time']).sort_values('adjusted_time')
 
-# Sort the dataframe by adjusted time
-df = df.sort_values('adjusted_time')
+# Define the interval
+# Change interval to 10S, 15S, 1min, 1T, 5min, 15min, 1H, etc.
+# to accumulated more voting booths per interval
+interval = '1T'
+df['interval'] = df['adjusted_time'].dt.floor(interval)
 
-# Calculate total votes and winning percentage for each booth
-df['total_votes'] = df['EG'] + df['NM']
-df['winning_pct'] = df[['EG', 'NM']].max(axis=1) / df['total_votes'] * 100
-df['winner'] = df[['EG', 'NM']].idxmax(axis=1)
+# Function to convert interval to readable format (bilingual)
+def interval_to_text(interval):
+    if interval.endswith('min'):
+        value = int(interval[:-3])
+        if language == 'en':
+            return f"{value} minute" if value == 1 else f"{value} minutes"
+        else:
+            return f"{value} minuto" if value == 1 else f"{value} minutos"
+    
+    value = int(interval[:-1])
+    unit = interval[-1]
+    
+    if language == 'en':
+        if unit == 'S':
+            return f"{value} second" if value == 1 else f"{value} seconds"
+        elif unit == 'T':
+            return f"{value} minute" if value == 1 else f"{value} minutes"
+        elif unit == 'H':
+            return f"{value} hour" if value == 1 else f"{value} hours"
+    else:
+        if unit == 'S':
+            return f"{value} segundo" if value == 1 else f"{value} segundos"
+        elif unit == 'T':
+            return f"{value} minuto" if value == 1 else f"{value} minutos"
+        elif unit == 'H':
+            return f"{value} hora" if value == 1 else f"{value} horas"
+    
+    return interval
+    
+# Calculate cumulative votes for each 15-minute interval
+df['cumulative_EG'] = df.groupby('interval')['EG'].cumsum()
+df['cumulative_NM'] = df.groupby('interval')['NM'].cumsum()
 
-# Create a color map
-cmap = mcolors.LinearSegmentedColormap.from_list("", ["red", "white", "blue"])
+# Calculate total votes and winning percentage for each interval
+df['total_votes'] = df['cumulative_EG'] + df['cumulative_NM']
+df['winning_pct'] = df[['cumulative_EG', 'cumulative_NM']].max(axis=1) / df['total_votes'] * 100
+df['winner'] = df[['cumulative_EG', 'cumulative_NM']].idxmax(axis=1)
 
-# Calculate color values (-1 for full NM, 1 for full EG)
-df['color_value'] = (df['EG'] - df['NM']) / df['total_votes']
+# Determine the color based on the winner
+df['color'] = np.where(df['cumulative_EG'] > df['cumulative_NM'], 'lightblue', 'lightcoral')
+
+# Keep only the last row of each 15-minute interval
+df = df.groupby('interval').last().reset_index()
 
 # Create the plot
 fig, ax = plt.subplots(figsize=(15, 8))
+ax.set_facecolor('#f0f0f0')  # Set a light gray background only for the plot area
 
-# Plot the scatter plot
+# Plot the scatter plot with the new color scheme
 scatter = ax.scatter(df['adjusted_time'], df['winning_pct'], 
-                     c=df['color_value'], cmap=cmap, 
+                     c=df['color'], 
                      s=20, alpha=0.7)
 
 # Set the x-axis to show hours and minutes
@@ -58,17 +102,31 @@ ax.xaxis.set_major_locator(plt.matplotlib.dates.HourLocator(interval=1))
 # Rotate and align the tick labels so they look better
 fig.autofmt_xdate()
 
-# Add labels and title
-ax.set_xlabel('Time')
-ax.set_ylabel('Winning Percentage')
-ax.set_title('Winning Percentage for Each Voting Booth Over Time')
+# Convert interval to a more readable format for the title
+interval_text = interval_to_text(interval)
+
+# Set labels and title based on language
+if language == 'en':
+    ax.set_xlabel('Reported Closing Time', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Winning Percentage', fontsize=12, fontweight='bold')
+    ax.set_title(f'Winning Percentage per Voting Booths Over Time (Interval: {interval_text})', 
+                 fontsize=16, fontweight='bold')
+    legend_labels = ['NM leading', 'EG leading']
+else:
+    ax.set_xlabel('Hora de Cierre Reportada', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Porcentaje de Ventaja', fontsize=12, fontweight='bold')
+    ax.set_title(f'Porcentaje de Ventaja por Centros Reportados (Intervalo: {interval_text})', 
+                 fontsize=16, fontweight='bold')
+    legend_labels = ['NM liderando', 'EG liderando']
+
 
 # Set y-axis limits to 50-100%
 ax.set_ylim(50, 100)
 
-# Add a color bar
-cbar = plt.colorbar(scatter)
-cbar.set_label('Favor towards NM (red) vs EG (blue)')
+# Update legend
+ax.scatter([], [], c='lightcoral', label=legend_labels[0], s=20)
+ax.scatter([], [], c='lightblue', label=legend_labels[1], s=20)
+ax.legend()
 
 # Add a grid for better readability
 ax.grid(True, linestyle='--', alpha=0.7)

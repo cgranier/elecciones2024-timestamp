@@ -33,17 +33,21 @@ df = df.dropna(subset=['adjusted_time'])
 # Sort the dataframe by adjusted time
 df = df.sort_values('adjusted_time')
 
-# Calculate cumulative votes
-df['EG_cumulative'] = df['EG'].cumsum()
-df['NM_cumulative'] = df['NM'].cumsum()
+# Calculate cumulative votes for all candidates
+candidates = ['EG', 'NM', 'LM', 'JABE', 'JOBR', 'AE', 'CF', 'DC', 'EM', 'BERA']
+for candidate in candidates:
+    df[f'{candidate}_cumulative'] = df[candidate].cumsum()
 
 # Create the plot
-fig, ax = plt.subplots(figsize=(12, 6))
-ax.set_facecolor('#f0f0f0')  # Set a light gray background only for the plot area
+fig, ax = plt.subplots(figsize=(14, 8))  # Increased figure size for better visibility
+ax.set_facecolor('#f0f0f0')
 
-# Plot cumulative votes
-ax.plot(df['adjusted_time'], df['EG_cumulative'] / 1e6, label='EG', color='#3498db', alpha=0.8, linewidth=2.5)
-ax.plot(df['adjusted_time'], df['NM_cumulative'] / 1e6, label='NM', color='#e74c3c', alpha=0.8, linewidth=2.5)
+# Color palette for the candidates
+colors = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#34495e', '#e67e22', '#95a5a6', '#d35400']
+
+# Plot cumulative votes for all candidates
+for candidate, color in zip(candidates, colors):
+    ax.plot(df['adjusted_time'], df[f'{candidate}_cumulative'] / 1e6, label=candidate, color=color, alpha=0.8, linewidth=2)
 
 # Set the x-axis to show hours and minutes
 ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%H:%M'))
@@ -55,18 +59,19 @@ fig.autofmt_xdate()
 # Add labels and title
 ax.set_xlabel('Reported Closing Time', fontsize=12, fontweight='bold')
 ax.set_ylabel('Cumulative Votes (Millions)', fontsize=12, fontweight='bold')
-ax.set_title('Cumulative Votes for EG and NM Over Time', fontsize=16, fontweight='bold')
+ax.set_title('Cumulative Votes Over Time', fontsize=16, fontweight='bold')
 
 # En español
-# ax.set_xlabel('Hora de cierre reportada', fontsize=12, fontweight='bold')
+# ax.set_xlabel('Hora de Cierre Reportada', fontsize=12, fontweight='bold')
 # ax.set_ylabel('Votos Acumulados (Millones)', fontsize=12, fontweight='bold')
-# ax.set_title('Votos Acumulados para EG y NM por Hora', fontsize=16, fontweight='bold')
+# ax.set_title('Votos Acumulados por Hora', fontsize=16, fontweight='bold')
+
 
 # Format y-axis ticks to show millions
 ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'{x:.1f}M'))
 
-# Add a legend
-ax.legend(loc='upper right', bbox_to_anchor=(1, 0.9), frameon=True, framealpha=0.9)
+# Adjust legend
+ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), frameon=True, framealpha=0.9)
 
 # Add a grid for better readability
 ax.grid(True, linestyle='--', alpha=0.7)
